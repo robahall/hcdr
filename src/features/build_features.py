@@ -11,12 +11,18 @@ def daysToYears(dfIn, dfOut):
     return dfOut
 
 def normalizeIncome(dfIn, dfOut):
-    """Log transform income and standardize income"""
+    """OLD - Log transform income and standardize income"""
     nIncome = np.log(dfIn['AMT_INCOME_TOTAL'])
     nIncome.rename('logAMT_INCOME', inplace = True)
     nMean = dfIn['AMT_INCOME_TOTAL'].mean() ## Finds mean
     nStd = dfIn['AMT_INCOME_TOTAL'].std() ## Finds standard deviation
     nIncome = (nIncome - nMean)/nStd ## Standardization
+    dfOut = pd.concat([dfOut, nIncome], axis = 1)
+    return dfOut
+
+def standardizedIncome(dfIn, dfOut):
+    """Log transform income and standardize"""
+    nIncome = pd.Series(preprocessing.scale(np.log(dfIn['AMT_INCOME_TOTAL'])), name = 'scaledLogINC')
     dfOut = pd.concat([dfOut, nIncome], axis = 1)
     return dfOut
 
@@ -49,7 +55,8 @@ def executeFeatures(dfIn):
 
     dfOut = dfIn['TARGET']  #update this with numerical columns that don't need cleaning
     dfOut = daysToYears(dfIn, dfOut)
-    dfOut = normalizeIncome(dfIn, dfOut)
+    #dfOut = normalizeIncome(dfIn, dfOut)
+    dfOut = standardizedIncome(dfIn, dfOut)
     dfOut = simplifyEducation(dfIn, dfOut)
     dfOut = simplifyFamily(dfIn, dfOut)
     dfOut = simplifyIncome(dfIn, dfOut)
