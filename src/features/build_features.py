@@ -1,5 +1,6 @@
 
-## Modules for feature cleaning Titanic dataset
+## Modules for feature engineering hcdr dataset
+import numpy as np
 import pandas as pd
 
 def daysToYears(dfIn, dfOut):
@@ -7,6 +8,16 @@ def daysToYears(dfIn, dfOut):
 
     years = dfIn['DAYS_BIRTH'] / -365
     dfOut = pd.concat([dfOut, years], axis = 1)
+    return dfOut
+
+def normalizeIncome(dfIn, dfOut):
+    """Log transform income and standardize income"""
+    nIncome = np.log(dfIn['AMT_INCOME_TOTAL'])
+    nIncome.rename('logAMT_INCOME', inplace = True)
+    nMean = dfIn['AMT_INCOME_TOTAL'].mean() ## Finds mean
+    nStd = dfIn['AMT_INCOME_TOTAL'].std() ## Finds standard deviation
+    nIncome = (nIncome - nMean)/nStd ## Standardization
+    dfIn = pd.concat([dfOut, nIncome], axis = 1)
     return dfOut
 
 
@@ -38,9 +49,9 @@ def executeFeatures(dfIn):
 
     dfOut = dfIn['TARGET']  #update this with numerical columns that don't need cleaning
     dfOut = daysToYears(dfIn, dfOut)
+    dfOut = normalizeIncome(dfIn, dfOut)
     dfOut = simplifyEducation(dfIn, dfOut)
     dfOut = simplifyFamily(dfIn, dfOut)
     dfOut = simplifyIncome(dfIn, dfOut)
-
 
     return dfOut
