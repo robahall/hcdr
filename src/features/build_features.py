@@ -25,9 +25,10 @@ def simplifyIncome(dfIn, dfOut):
     return dfOut
 
 
-def execute_cleaning(dfIn, dfOut):
+def execute_cleaning(dfIn):
     """One education, family, income."""
 
+    dfOut = pd.DataFrame(appTrainDf[['YEARS_BIRTH', 'TARGET']])
     dfOut = simplifyEducation(dfIn, dfOut)
     dfOut = simplifyFamily(dfIn, dfOut)
     dfOut = simplifyIncome(dfIn, dfOut)
