@@ -17,7 +17,7 @@ def normalizeIncome(dfIn, dfOut):
     nMean = dfIn['AMT_INCOME_TOTAL'].mean() ## Finds mean
     nStd = dfIn['AMT_INCOME_TOTAL'].std() ## Finds standard deviation
     nIncome = (nIncome - nMean)/nStd ## Standardization
-    dfIn = pd.concat([dfOut, nIncome], axis = 1)
+    dfOut = pd.concat([dfOut, nIncome], axis = 1)
     return dfOut
 
 
