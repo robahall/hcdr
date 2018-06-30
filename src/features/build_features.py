@@ -26,6 +26,15 @@ def standardizedIncome(dfIn, dfOut):
     dfOut = pd.concat([dfOut, nIncome], axis = 1)
     return dfOut
 
+def engineerDays(dfIn, dfOut):
+    '''DAYS_EMPLOYEED is from when employment starts. Data is positively skewed.
+    Need to log transform. Added flag columns for the anomly in data and people who have no job (only 2 in train set) .'''
+    dfOut['DAYS_EMPLOYED_ANOM'] = dfIn["DAYS_EMPLOYED"] == 365243
+    dfOut['DAYS_EMPLOYED_ZERO'] = dfIn["DAYS_EMPLOYED"] == 0
+    dfOut['DAYS_EMPLOYED'] = dfIn['DAYS_EMPLOYED'].replace({0: np.nan})
+    dfOut['DAYS_EMPLOYED'] = (dfOut['DAYS_EMPLOYED'] * (-1)).apply(np.log)
+    dfOut['DAYS_EMPLOYED'] = dfOut['DAYS_EMPLOYED'].replace({np.log(365243): np.nan})
+    return dfOut
 
 def simplifyEducation(dfIn, dfOut):
     """Update education and one hot encode them"""
@@ -57,6 +66,7 @@ def executeFeatures(dfIn):
     dfOut = daysToYears(dfIn, dfOut)
     #dfOut = normalizeIncome(dfIn, dfOut)
     dfOut = standardizedIncome(dfIn, dfOut)
+    dfOut = engineerDays(dfIn, dfOut)
     dfOut = simplifyEducation(dfIn, dfOut)
     dfOut = simplifyFamily(dfIn, dfOut)
     dfOut = simplifyIncome(dfIn, dfOut)
