@@ -6,7 +6,7 @@ def daysToYears(dfIn, dfOut):
     """Update education and one hot encode them"""
 
     years = dfIn['DAYS_BIRTH'] / -365
-    dfOut = pd.concat([dfOut, years])
+    dfOut = pd.concat([dfOut, years], axis = 1)
     return dfOut
 
 
@@ -36,10 +36,11 @@ def simplifyIncome(dfIn, dfOut):
 def executeFeatures(dfIn):
     """One education, family, income."""
 
-    dfOut = pd.DataFrame(dfIn['TARGET'])  #update this with numerical columns that don't need cleaning
+    dfOut = dfIn['TARGET']  #update this with numerical columns that don't need cleaning
     dfOut = daysToYears(dfIn, dfOut)
     dfOut = simplifyEducation(dfIn, dfOut)
     dfOut = simplifyFamily(dfIn, dfOut)
     dfOut = simplifyIncome(dfIn, dfOut)
+
 
     return dfOut
