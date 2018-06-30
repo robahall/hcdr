@@ -48,6 +48,7 @@ def executeFeatures(dfIn):
 
     dfOut = dfIn['TARGET']  #update this with numerical columns that don't need cleaning
     dfOut = daysToYears(dfIn, dfOut)
+    dfOut = normalizeIncome(dfIn, dfOut)
     dfOut = simplifyEducation(dfIn, dfOut)
     dfOut = simplifyFamily(dfIn, dfOut)
     dfOut = simplifyIncome(dfIn, dfOut)
