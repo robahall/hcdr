@@ -1,5 +1,6 @@
 
-## Modules for feature cleaning Titanic dataset
+## Modules for feature engineering hcdr dataset
+import numpy as np
 import pandas as pd
 
 def daysToYears(dfIn, dfOut):
