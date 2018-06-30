@@ -2,6 +2,14 @@
 ## Modules for feature cleaning Titanic dataset
 import pandas as pd
 
+def daysToYears(dfIn, dfOut):
+    """Update education and one hot encode them"""
+
+    years = dfIn['DAYS_BIRTH'] / -365
+    dfOut = pd.concat([dfOut, years])
+    return dfOut
+
+
 def simplifyEducation(dfIn, dfOut):
     """Update education and one hot encode them"""
 
@@ -25,10 +33,10 @@ def simplifyIncome(dfIn, dfOut):
     return dfOut
 
 
-def execute_cleaning(dfIn):
+def executeFeatures(dfIn):
     """One education, family, income."""
-
-    dfOut = pd.DataFrame(appTrainDf[['YEARS_BIRTH', 'TARGET']])
+    dfOut = pd.DataFrame(appTrainDf['TARGET'])  #update this with numerical columns that don't need cleaning
+    dfOut = daysToYears(dfIn, dfOut)
     dfOut = simplifyEducation(dfIn, dfOut)
     dfOut = simplifyFamily(dfIn, dfOut)
     dfOut = simplifyIncome(dfIn, dfOut)
