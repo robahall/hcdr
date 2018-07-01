@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import Imputer
 from sklearn.preprocessing import scale
+from sklearn.preprocessing import LabelEncoder
 
 def daysToYears(dfIn, dfOut):
     """Update education and one hot encode them"""
@@ -67,6 +68,19 @@ def simplifyIncome(dfIn, dfOut):
     dfOut = pd.concat([dfOut, inc], axis=1)
     return dfOut
 
+def createEncoders(dfIn, dfOut):
+    labelEncode = LabelEncoder()
+    leCount = 0
+
+    for col in dfIn:
+        if dfIn[col].dtype == 'object':
+            if len(list(dfIn[col].unique())) <= 2:
+                labelEncode.fit(dfIn[col])
+                dfOut[col] = labelEncode.transform(dfIn[col])
+
+                leCount += 1
+    print("{:d} columns were label encoded".format(leCOunt))
+
 
 def executeFeatures(dfIn):
     """One education, family, income."""
@@ -76,6 +90,7 @@ def executeFeatures(dfIn):
     #dfOut = normalizeIncome(dfIn, dfOut)
     dfOut = standardizedIncome(dfIn, dfOut)
     dfOut = engineerDays(dfIn, dfOut)
+    dfOut = createEncoders(dfIn, dfOut)
     dfOut = simplifyEducation(dfIn, dfOut)
     dfOut = simplifyFamily(dfIn, dfOut)
     dfOut = simplifyIncome(dfIn, dfOut)
