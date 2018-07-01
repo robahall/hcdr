@@ -69,6 +69,7 @@ def simplifyIncome(dfIn, dfOut):
     return dfOut
 
 def createEncoders(dfIn, dfOut):
+    '''Convert from object type to binary'''
     labelEncode = LabelEncoder()
     leCount = 0
 
@@ -79,7 +80,8 @@ def createEncoders(dfIn, dfOut):
                 dfOut[col] = labelEncode.transform(dfIn[col])
 
                 leCount += 1
-    print("{:d} columns were label encoded".format(leCOunt))
+    print("{:d} columns were label encoded".format(leCount))
+    return dfOut
 
 
 def executeFeatures(dfIn):
