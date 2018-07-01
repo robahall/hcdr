@@ -83,6 +83,32 @@ def createEncoders(dfIn, dfOut):
     print("{:d} columns were label encoded".format(leCount))
     return dfOut
 
+def makeCreditIncome(dfIn, dfOut):
+    '''Create feature of Credit to Income percentage'''
+    creditIncome = dfIn['AMT_CREDIT'] / dfIn['AMT_INCOME_TOTAL']
+    creditIncome = pd.Series(np.log(creditIncome.fillna(creditIncome.median())), name='creditIncomePct')
+    dfOut = pd.concat([dfOut, creditIncome], axis=1)
+    return dfOut
+
+def makeAnnuityIncome(dfIn, dfOut):
+    '''Amount of annualized payment to income percentage '''
+    annuityIncomePct = dfIn['AMT_ANNUITY'] / dfIn['AMT_INCOME_TOTAL']
+    annuityIncomePct = pd.Series(np.log(annuityIncomePct.fillna(annuityIncomePct.median())), name='annuityIncomePct')
+    dfOut = pd.concat([dfOut, annuityIncomePct], axis=1)
+    return dfOut
+
+def makeCreditTerm(dfIn, dfOut):
+    '''Fraction of annualized payment to credit'''
+    dfOut['creditTerm'] = dfIn['AMT_ANNUITY'] / dfIn['AMT_CREDIT']
+    dfOut['creditTerm'] = dfOut['creditTerm'].fillna(dfOut['creditTerm'].median())
+    return dfOut
+
+def makeDaysEmployeed(dfIn, dfOut):
+    '''Ratio of days employed to days since they were born'''
+    dfOut['daysEmployedPct'] = dfIn['DAYS_EMPLOYED'] / dfIn['DAYS_BIRTH']
+    return dfOut
+
+
 
 def executeFeatures(dfIn):
     """One education, family, income."""
@@ -96,5 +122,9 @@ def executeFeatures(dfIn):
     dfOut = simplifyEducation(dfIn, dfOut)
     dfOut = simplifyFamily(dfIn, dfOut)
     dfOut = simplifyIncome(dfIn, dfOut)
+    dfOut = makeCreditIncome(dfIn, dfOut)
+    dfOut = makeAnnuityIncome(dfIn, dfOut)
+    dfOut = makeCreditTerm(dfIn, dfOut)
+    dfOut = makeDaysEmployeed(dfIn, dfOut)
 
     return dfOut
