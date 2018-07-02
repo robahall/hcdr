@@ -108,63 +108,96 @@ def makeDaysEmployeed(dfIn, dfOut):
     dfOut['daysEmployedPct'] = dfIn['DAYS_EMPLOYED'] / dfIn['DAYS_BIRTH']
     return dfOut
 
+def addExtSources(dfIn, dfOut):
+    '''Add External Sources'''
+    dfOut['EXT_SOURCE_1'] = dfIn['EXT_SOURCE_1']
+    dfOut['EXT_SOURCE_2'] = dfIn['EXT_SOURCE_2']
+    dfOut['EXT_SOURCE_3'] = dfIn['EXT_SOURCE_3']
+    return dfOut
+
 def cleanNames(dfOut):
-    dfOut = dfOut.columns = ['TARGET', 'DAYS_BIRTH', 'scaledLogINC', 'DAYS_EMPLOYED_ANOM', 'DAYS_EMPLOYED_ZERO',
-                          'DAYS_EMPLOYED',
-                          'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'EDU_Academic_degree',
-                          'EDU_Higher_education', 'EDU_Incomplete_higher', 'EDU_Lower_secondary',
-                          'EDU_Secondary_special', 'FAM_Civil_marriage', 'FAM_Married', 'FAM_Separated', 'FAM_Single',
-                          'FAM_Unknown',
-                          'FAM_Widow', 'INC_Businessman', 'INC_Commercial', 'INC_Maternity', 'INC_Pensioner',
-                          'INC_State', 'INC_Student',
-                          'INC_Unemployed', 'INC_Working', 'creditIncomePct', 'annuityIncomePct', 'creditTerm',
-                          'daysEmployedPct']
+    dfOut.columns = ['TARGET', 'DAYS_BIRTH', 'scaledLogINC', 'DAYS_EMPLOYED_ANOM', 'DAYS_EMPLOYED_ZERO', 'DAYS_EMPLOYED',
+                     'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'EDU_Academic_degree', 'EDU_Higher_education',
+                     'EDU_Incomplete_higher', 'EDU_Lower_secondary', 'EDU_Secondary_special', 'FAM_Civil_marriage',
+                     'FAM_Married', 'FAM_Separated', 'FAM_Single', 'FAM_Unknown', 'FAM_Widow', 'INC_Businessman',
+                     'INC_Commercial', 'INC_Maternity', 'INC_Pensioner', 'INC_State', 'INC_Student', 'INC_Unemployed',
+                     'INC_Working', 'creditIncomePct', 'annuityIncomePct', 'creditTerm', 'daysEmployedPct', 'EXT_SOURCE_1',
+                     'EXT_SOURCE_2', 'EXT_SOURCE_3']
     return dfOut
 
-def createPolyFeatures(dfIn, dfOut):
+def cleanNamesTest(dfOut):
+    dfOut.columns = ['SK_ID_CURR', 'DAYS_BIRTH', 'scaledLogINC', 'DAYS_EMPLOYED_ANOM', 'DAYS_EMPLOYED_ZERO', 'DAYS_EMPLOYED',
+                     'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'EDU_Academic_degree', 'EDU_Higher_education',
+                     'EDU_Incomplete_higher', 'EDU_Lower_secondary', 'EDU_Secondary_special', 'FAM_Civil_marriage',
+                     'FAM_Married', 'FAM_Separated', 'FAM_Single', 'FAM_Widow', 'INC_Businessman',
+                     'INC_Commercial',  'INC_Pensioner', 'INC_State', 'INC_Student', 'INC_Unemployed',
+                     'INC_Working', 'creditIncomePct', 'annuityIncomePct', 'creditTerm', 'daysEmployedPct', 'EXT_SOURCE_1',
+                     'EXT_SOURCE_2', 'EXT_SOURCE_3']
+    return dfOut
+
+def createPolyFeatures(dfOut):
     '''These features have been created from ANOVA in 4.0'''
-    dfOut['empAnomToNameContract'] = dfIn['DAYS_EMPLOYED_ANOM']*dfIn['NAME_CONTRACT_TYPE']
-    dfOut['daysEmployedToCreditIncomePct'] = dfIn['DAYS_EMPLOYED']*dfIn['creditIncomePct']
-    dfOut['daysEmployedToAnnuityIncomePct'] = dfIn['DAYS_EMPLOYED']*dfIn['annuityIncomePct']
-    dfOut['daysEmployedToCreditTerm'] = dfIn['DAYS_EMPLOYED'] * dfIn['creditTerm']
-    dfOut['daysEmployedToDaysEmployedPct'] = dfIn['DAYS_EMPLOYED'] * dfIn['daysEmployedPct']
-    dfOut['daysEmployedAnomToEduLowerSecondary'] = dfIn['DAYS_EMPLOYED_ANOM'] * dfIn['EDU_Lower_secondary']
-    dfOut['daysEmployedAnomToFamMarried'] = dfIn['DAYS_EMPLOYED_ANOM'] * dfIn['FAM_Married']
-    dfOut['daysEmployedAnomToFamSingle'] = dfIn['DAYS_EMPLOYED_ANOM'] * dfIn['FAM_Single']
-    dfOut['daysEmployedAnomToIncBusinessman'] = dfIn['DAYS_EMPLOYED_ANOM'] * dfIn['INC_Businessman']
-    dfOut['daysEmployedAnomToIncCommercial'] = dfIn['DAYS_EMPLOYED_ANOM'] * dfIn['INC_Commercial']
-    dfOut['daysEmployedAnomToCreditIncomePct'] = dfIn['DAYS_EMPLOYED_ANOM'] * dfIn['creditIncomePct']
-    dfOut['daysEmployedAnomToAnnuityIncomePct'] = dfIn['DAYS_EMPLOYED_ANOM'] * dfIn['annuityIncomePct']
-    dfOut['daysEmployedAnomToCreditTerm'] = dfIn['DAYS_EMPLOYED_ANOM'] * dfIn['creditTerm']
-    dfOut['daysEmployedAnomToDaysEmployedPct'] = dfIn['DAYS_EMPLOYED_ANOM'] * dfIn['daysEmployedPct']
-    dfOut['eduHigherEducationToDaysEmployed'] = dfIn['EDU_Higher_education'] * dfIn['DAYS_EMPLOYED']
-    dfOut['eduHigherEducationToCreditIncomePct'] = dfIn['EDU_Higher_education'] * dfIn['creditIncomePct']
-    dfOut['eduHigherEducationToAnnuityIncomePct'] = dfIn['EDU_Higher_education'] * dfIn['annuityIncomePct']
-    dfOut['eduHigherEducationToCreditTerm'] = dfIn['EDU_Higher_education'] * dfIn['creditTerm']
-    dfOut['eduHigherEducationToCreditIncomePct'] = dfIn['EDU_Higher_education'] * dfIn['creditIncomePct']
-    dfOut['eduHigherEducationToCreditIncomePct'] = dfIn['EDU_Higher_education'] * dfIn['creditIncomePct']
-    dfOut['eduHigherEducationToCreditIncomePct'] = dfIn['EDU_Higher_education'] * dfIn['creditIncomePct']
+
+    dfOut['empAnomToNameContract'] = dfOut['DAYS_EMPLOYED_ANOM']*dfOut['NAME_CONTRACT_TYPE']
+    dfOut['daysEmployedToCreditIncomePct'] = dfOut['DAYS_EMPLOYED']*dfOut['creditIncomePct']
+    dfOut['daysEmployedToAnnuityIncomePct'] = dfOut['DAYS_EMPLOYED']*dfOut['annuityIncomePct']
+    dfOut['daysEmployedToCreditTerm'] = dfOut['DAYS_EMPLOYED'] * dfOut['creditTerm']
+    dfOut['daysEmployedToDaysEmployedPct'] = dfOut['DAYS_EMPLOYED'] * dfOut['daysEmployedPct']
+    dfOut['daysEmployedAnomToEduLowerSecondary'] = dfOut['DAYS_EMPLOYED_ANOM'] * dfOut['EDU_Lower_secondary']
+    dfOut['daysEmployedAnomToFamMarried'] = dfOut['DAYS_EMPLOYED_ANOM'] * dfOut['FAM_Married']
+    dfOut['daysEmployedAnomToFamSingle'] = dfOut['DAYS_EMPLOYED_ANOM'] * dfOut['FAM_Single']
+    dfOut['daysEmployedAnomToIncBusinessman'] = dfOut['DAYS_EMPLOYED_ANOM'] * dfOut['INC_Businessman']
+    dfOut['daysEmployedAnomToIncCommercial'] = dfOut['DAYS_EMPLOYED_ANOM'] * dfOut['INC_Commercial']
+    dfOut['daysEmployedAnomToCreditIncomePct'] = dfOut['DAYS_EMPLOYED_ANOM'] * dfOut['creditIncomePct']
+    dfOut['daysEmployedAnomToAnnuityIncomePct'] = dfOut['DAYS_EMPLOYED_ANOM'] * dfOut['annuityIncomePct']
+    dfOut['daysEmployedAnomToCreditTerm'] = dfOut['DAYS_EMPLOYED_ANOM'] * dfOut['creditTerm']
+    dfOut['daysEmployedAnomToDaysEmployedPct'] = dfOut['DAYS_EMPLOYED_ANOM'] * dfOut['daysEmployedPct']
+    dfOut['eduHigherEducationToDaysEmployed'] = dfOut['EDU_Higher_education'] * dfOut['DAYS_EMPLOYED']
+    dfOut['eduHigherEducationToCreditIncomePct'] = dfOut['EDU_Higher_education'] * dfOut['creditIncomePct']
+    dfOut['eduHigherEducationToAnnuityIncomePct'] = dfOut['EDU_Higher_education'] * dfOut['annuityIncomePct']
+    dfOut['eduHigherEducationToCreditTerm'] = dfOut['EDU_Higher_education'] * dfOut['creditTerm']
+    dfOut['eduHigherEducationToCreditIncomePct'] = dfOut['EDU_Higher_education'] * dfOut['creditIncomePct']
+    dfOut['eduHigherEducationToCreditIncomePct'] = dfOut['EDU_Higher_education'] * dfOut['creditIncomePct']
+    dfOut['eduHigherEducationToCreditIncomePct'] = dfOut['EDU_Higher_education'] * dfOut['creditIncomePct']
     return dfOut
 
 
-def executeFeatures(dfIn):
+def executeFeatures(dfIn, train = True):
     """One education, family, income."""
 
-    dfOut = dfIn['TARGET']  #update this with numerical columns that don't need cleaning
-    dfOut = daysToYears(dfIn, dfOut)
-    #dfOut = normalizeIncome(dfIn, dfOut)
-    dfOut = standardizedIncome(dfIn, dfOut)
-    dfOut = engineerDays(dfIn, dfOut)
-    dfOut = createEncoders(dfIn, dfOut)
-    dfOut = simplifyEducation(dfIn, dfOut)
-    dfOut = simplifyFamily(dfIn, dfOut)
-    dfOut = simplifyIncome(dfIn, dfOut)
-    dfOut = makeCreditIncome(dfIn, dfOut)
-    dfOut = makeAnnuityIncome(dfIn, dfOut)
-    dfOut = makeCreditTerm(dfIn, dfOut)
-    dfOut = makeDaysEmployeed(dfIn, dfOut)
-    dfOut = cleanNames(dfOut)
-    dfOut = createPolyFeatures(dfIn, dfOut)
-
+    if train == True:
+        dfOut = dfIn['TARGET'] #update this with numerical columns that don't need cleaning
+        dfOut = daysToYears(dfIn, dfOut)
+        dfOut = standardizedIncome(dfIn, dfOut)
+        dfOut = engineerDays(dfIn, dfOut)
+        dfOut = createEncoders(dfIn, dfOut)
+        dfOut = simplifyEducation(dfIn, dfOut)
+        dfOut = simplifyFamily(dfIn, dfOut)
+        dfOut = simplifyIncome(dfIn, dfOut)
+        dfOut = makeCreditIncome(dfIn, dfOut)
+        dfOut = makeAnnuityIncome(dfIn, dfOut)
+        dfOut = makeCreditTerm(dfIn, dfOut)
+        dfOut = makeDaysEmployeed(dfIn, dfOut)
+        dfOut = addExtSources(dfIn, dfOut)
+        dfOut = cleanNames(dfOut)
+        dfOut = createPolyFeatures(dfOut)
+    else:
+        dfOut = dfIn['SK_ID_CURR'] ## tags from test set
+        dfOut = daysToYears(dfIn, dfOut)
+        dfOut = standardizedIncome(dfIn, dfOut)
+        dfOut = engineerDays(dfIn, dfOut)
+        dfOut = createEncoders(dfIn, dfOut)
+        dfOut = simplifyEducation(dfIn, dfOut)
+        dfOut = simplifyFamily(dfIn, dfOut)
+        dfOut = simplifyIncome(dfIn, dfOut)
+        dfOut = makeCreditIncome(dfIn, dfOut)
+        dfOut = makeAnnuityIncome(dfIn, dfOut)
+        dfOut = makeCreditTerm(dfIn, dfOut)
+        dfOut = makeDaysEmployeed(dfIn, dfOut)
+        dfOut = addExtSources(dfIn, dfOut)
+        dfOut = dfOut.drop('CODE_GENDER', axis = 1) ## Need to fix this
+        #print(dfOut.columns)
+        dfOut = cleanNamesTest(dfOut)
+        dfOut = createPolyFeatures(dfOut)
 
     return dfOut
