@@ -13,15 +13,6 @@ def daysToYears(dfIn, dfOut):
     dfOut = pd.concat([dfOut, years], axis = 1)
     return dfOut
 
-def normalizeIncome(dfIn, dfOut):
-    """OLD - Log transform income and standardize income"""
-    nIncome = np.log(dfIn['AMT_INCOME_TOTAL'])
-    nIncome.rename('logAMT_INCOME', inplace = True)
-    nMean = dfIn['AMT_INCOME_TOTAL'].mean() ## Finds mean
-    nStd = dfIn['AMT_INCOME_TOTAL'].std() ## Finds standard deviation
-    nIncome = (nIncome - nMean)/nStd ## Standardization
-    dfOut = pd.concat([dfOut, nIncome], axis = 1)
-    return dfOut
 
 def standardizedIncome(dfIn, dfOut):
     """Log transform income and standardize"""
