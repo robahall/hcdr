@@ -8,10 +8,6 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-
-
-
-
 class TypeSelector(BaseEstimator, TransformerMixin):
     """Selects if class is a boolean, a numeric, or a categorical feature"""
 
@@ -26,16 +22,25 @@ class TypeSelector(BaseEstimator, TransformerMixin):
         return X.select_dtypes(include=[self.dtype])
 
 class StringIndexer(BaseEstimator, TransformerMixin):
-    """S"""
+    """Check if dataframe and then replace NaNs for OneHotEncoder"""
 
     def fit(self, X, y = None):
         return self
 
     def transform(self, X):
         assert isinstance(X, pd.DataFrame)
-        return X.apply(lambda s: s.cat.codes.replace(
-            {-1: len(s.cat.categories)} )
-                       )
+        return X.apply(lambda s: s.cat.codes.replace({-1: len(s.cat.categories)}))
+
+class TransFormObjCat(BaseEstimator, TransformerMixin):
+    """Transforms object from object dtype to category dtype"""
+
+    def fit(self, X, y = None):
+        return self
+
+    def transform(self, X):
+        assert isinstance(X, pd.DataFrame)
+        if X.dtypes == 'object':
+            return X.astype('category')
 
 
 
@@ -156,7 +161,7 @@ def cleanNames(dfOut):
 
 def cleanNamesTest(dfOut):
     dfOut.columns = ['SK_ID_CURR', 'DAYS_BIRTH', 'scaledLogINC', 'DAYS_EMPLOYED_ANOM', 'DAYS_EMPLOYED_ZERO', 'DAYS_EMPLOYED',
-                     'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'EDU_Academic_degree', 'EDU_Higher_education',
+                     'NAME_CONTRACT_TYPE"', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'EDU_Academic_degree', 'EDU_Higher_education',
                      'EDU_Incomplete_higher', 'EDU_Lower_secondary', 'EDU_Secondary_special', 'FAM_Civil_marriage',
                      'FAM_Married', 'FAM_Separated', 'FAM_Single', 'FAM_Widow', 'INC_Businessman',
                      'INC_Commercial',  'INC_Pensioner', 'INC_State', 'INC_Student', 'INC_Unemployed',
