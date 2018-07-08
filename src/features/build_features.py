@@ -5,6 +5,43 @@ import pandas as pd
 from sklearn.preprocessing import Imputer
 from sklearn.preprocessing import scale
 from sklearn.preprocessing import LabelEncoder
+from sklearn.base import BaseEstimator, TransformerMixin
+
+
+
+
+
+
+class TypeSelector(BaseEstimator, TransformerMixin):
+    """Selects if class is a boolean, a numeric, or a categorical feature"""
+
+    def __init__(self, dtype):
+        self.dtype = dtype
+
+    def fit(self, X, y = None):
+        return self
+
+    def transform(self, X):
+        assert isinstance(X, pd.DataFrame)
+        return X.select_dtypes(include=[self.dtype])
+
+class StringIndexer(BaseEstimator, TransformerMixin):
+    """S"""
+
+    def fit(self, X, y = None):
+        return self
+
+    def transform(self, X):
+        assert isinstance(X, pd.DataFrame)
+        return X.apply(lambda s: s.cat.codes.replace(
+            {-1: len(s.cat.categories)} )
+                       )
+
+
+
+
+##Needs to be all shifted to make dataset. This will be the class structure to clean now.
+
 
 def daysToYears(dfIn, dfOut):
     """Update education and one hot encode them"""
@@ -22,8 +59,9 @@ def standardizedIncome(dfIn, dfOut):
 
 
 def engineerDays(dfIn, dfOut):
-    '''DAYS_EMPLOYEED is from when employment starts. Data is positively skewed.
-    Need to log transform. Added flag columns for the anomly in data and people who have no job (only 2 in train set) .'''
+    """DAYS_EMPLOYEED is from when employment starts. Data is positively skewed.
+    Need to log transform. Added flag columns for the anomly in data and people who have no job (only 2 in train set) .
+    """
 
     imp = Imputer(missing_values='NaN', strategy='mean', axis=1)
 
