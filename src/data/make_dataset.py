@@ -1,8 +1,22 @@
 # -*- coding: utf-8 -*-
+
+# Python functionality
 import click
 import logging
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
+
+# Vectorization
+import numpy as np
+import pandas as pd
+
+# Sci Kit learn packages for feature transforming
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+sys.path.append('../features')
+import build_features as bf
+
+
 
 
 @click.command()
@@ -16,6 +30,35 @@ def main(input_filepath, output_filepath):
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')
 
+    featureExtraction = Pipeline([
+        ('features', FeatureUnion(n_jobs= 1, transformer_list=[
+
+            # Split out numerics for processing
+            ('numeric', Pipeline ([
+                ('selector', bf.TypeSelector(np.number)),
+                ('scaler', StandardScaler())
+            ])),
+
+            # Split out booleans for processing
+            ('boolean', Pipeline([
+                ('selector', bf.TypeSelector('bool'))
+            ])),
+
+            # Split out categorical
+            ('categorical', Pipeline([
+                ('objCat', bf.TransFormObjCat()),
+                ('selector', bf.TypeSelector('category')),
+                ('labeler', bf.StringIndexer()),
+                ('encoder', OneHotEncoder(handle_unknown = 'ignore'))
+
+            ]))
+
+
+        ]))
+    ])
+
+
+
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -26,6 +69,6 @@ if __name__ == '__main__':
 
     # find .env automatically by walking up directories until it's found, then
     # load up the .env entries as environment variables
-    load_dotenv(find_dotenv())
+    #load_dotenv(find_dotenv())
 
     main()
