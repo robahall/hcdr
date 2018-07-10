@@ -19,7 +19,6 @@ import build_features as bf
 
 
 
-
 #@click.command()
 #@click.argument('input_filepath', type=click.Path(exists=True))
 #@click.argument('output_filepath', type=click.Path())
@@ -63,6 +62,10 @@ def main(input_filepath, output_filepath):
     train = pd.read_csv(input_filepath)
     y = train.iloc[:, 0:2]
     X = train.iloc[:, 2:]
+
+    featureExtraction.fit(X)
+
+    y.concat
 
     return
 

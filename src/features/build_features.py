@@ -1,15 +1,40 @@
 
 ## Modules for feature engineering hcdr dataset
+from functools import reduce
+
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import Imputer
-from sklearn.preprocessing import scale
-from sklearn.preprocessing import LabelEncoder
+
+
+from scipy.stats  import skewtest
+
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.preprocessing import Imputer, scale, LabelEncoder, OneHotEncoder
+
+
+
+## Base Selectors and Creators in scikit-learn Pipeline
+
+class DFFeatureUnion(BaseEstimator, TransformerMixin):
+    """Feature Union in Pipeline that is Pandas compatible."""
+
+    def __init__(self, transformer_list):
+        self.transformer_list = transformer_list
+
+    def fit(self, X, y=None):
+        for (name, t) in self.transformer_list:
+            t.fit(X, y)
+        return self
+
+    def transform(self, X):
+        Xts = [t.transform(X) for _, t in self.transformer_list]
+        Xunion = reduce(lambda X1, X2: pd.merge(X1, X2, left_index=True, right_index=True), Xts)
+        return Xunion
 
 
 class TypeSelector(BaseEstimator, TransformerMixin):
-    """Selects if class is a boolean, a numeric, or a categorical feature"""
+    """Selects if class is a boolean, a numeric, or a categorical feature. Pandas compatible"""
 
     def __init__(self, dtype):
         self.dtype = dtype
@@ -21,31 +46,90 @@ class TypeSelector(BaseEstimator, TransformerMixin):
         assert isinstance(X, pd.DataFrame)
         return X.select_dtypes(include=[self.dtype])
 
-class StringIndexer(BaseEstimator, TransformerMixin):
-    """Check if dataframe and then replace NaNs for OneHotEncoder"""
+
+
+class DFImputer(BaseEstimator, TransformerMixin):
+    """Selects how missing data will be updated. Pandas compatible."""
+    #TODO: need to create a dummy column to keep NaN features available.
+
+    def __init__(self, strategy='mean'):
+        self.strategy = strategy
+        self.im = None
+        self.statistics_ = None
+
+    def fit(self, X, y=None):
+        self.im = Imputer(missing_values='NaN', strategy=self.strategy).fit(X)
+        return self
+
+    def transform(self, X):
+        Xim = self.im.transform(X)
+        Ximputed = pd.DataFrame(Xim, index=X.index, columns=X.columns)
+        return Ximputed
+
+
+#Clean Numeric
+
+class LogTrans(BaseEstimator, TransformerMixin):
+    """Tests skew of numeric dataset. If skew test p<=0.05, ensure values are log transformed."""
+    #TODO: Doesn't always work as planned with skew test. Especially when distribution is close to uniform.
+
+    def __init__(self, pvalue=1):
+        self.pvalue = pvalue
+
+    def transform(self, X):
+        combine = zip(X, self.pvalue)
+        Xtl = [np.log1p(np.absolute(X[XSeries])) if pvalues <= 0.05 else X[XSeries] for XSeries, pvalues in combine]
+        return reduce(lambda X1, X2: pd.concat((X1, X2), axis=1), Xtl)
+
+    def fit(self, X, y=None):
+        self.zscore, self.pvalue = skewtest(X)
+        return self
+
+
+class DFStandardScaler(BaseEstimator, TransformerMixin):
+    """Standardizes distribution. Pandas compatible. """
+
+    def __init__(self):
+        self.ss = None
+
+    def fit(self, X, y=None):
+        self.ss = StandardScaler().fit(X)
+        return self
+
+    def transform(self, X):
+        Xss = self.ss.transform(X)
+        Xscaled = pd.DataFrame(Xss, index=X.index, columns=X.columns)
+        return Xscaled
+
+
+
+#Clean Categorical
+
+class CleanString(BaseEstimator, TransformerMixin):
+    """Cleans String. Pandas compatible"""
 
     def fit(self, X, y = None):
         return self
 
     def transform(self, X):
         assert isinstance(X, pd.DataFrame)
-        return X.apply(lambda s: s.cat.codes.replace({-1: len(s.cat.categories)}))
+        return X.apply(lambda s: s.str.replace(' ', ''))
 
-class TransFormObjCat(BaseEstimator, TransformerMixin):
-    """Transforms object from object dtype to category dtype"""
 
-    def fit(self, X, y = None):
+class GetDummies(BaseEstimator, TransformerMixin):
+    """Uses pandas get dummies over OneHotEncoder. Pandas compatible."""
+    def fit(self, X, y=None):
         return self
 
     def transform(self, X):
         assert isinstance(X, pd.DataFrame)
-        if X.dtypes == 'object':
-            return X.astype('category')
+        return pd.get_dummies(X)
 
 
 
 
-##Needs to be all shifted to make dataset. This will be the class structure to clean now.
+
+# Old code. Needs to be removed.
 
 
 def daysToYears(dfIn, dfOut):
