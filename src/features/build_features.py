@@ -1,10 +1,136 @@
 
 ## Modules for feature engineering hcdr dataset
+from functools import reduce
+
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import Imputer
-from sklearn.preprocessing import scale
-from sklearn.preprocessing import LabelEncoder
+
+
+from scipy.stats  import skewtest
+
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.preprocessing import Imputer, scale, LabelEncoder, OneHotEncoder
+
+
+
+## Base Selectors and Creators in scikit-learn Pipeline
+
+class DFFeatureUnion(BaseEstimator, TransformerMixin):
+    """Feature Union in Pipeline that is Pandas compatible."""
+
+    def __init__(self, transformer_list):
+        self.transformer_list = transformer_list
+
+    def fit(self, X, y=None):
+        for (name, t) in self.transformer_list:
+            t.fit(X, y)
+        return self
+
+    def transform(self, X):
+        Xts = [t.transform(X) for _, t in self.transformer_list]
+        Xunion = reduce(lambda X1, X2: pd.merge(X1, X2, left_index=True, right_index=True), Xts)
+        return Xunion
+
+
+class TypeSelector(BaseEstimator, TransformerMixin):
+    """Selects if class is a boolean, a numeric, or a categorical feature. Pandas compatible"""
+
+    def __init__(self, dtype):
+        self.dtype = dtype
+
+    def fit(self, X, y = None):
+        return self
+
+    def transform(self, X):
+        assert isinstance(X, pd.DataFrame)
+        return X.select_dtypes(include=[self.dtype])
+
+
+
+class DFImputer(BaseEstimator, TransformerMixin):
+    """Selects how missing data will be updated. Pandas compatible."""
+    #TODO: need to create a dummy column to keep NaN features available.
+
+    def __init__(self, strategy='mean'):
+        self.strategy = strategy
+        self.im = None
+        self.statistics_ = None
+
+    def fit(self, X, y=None):
+        self.im = Imputer(missing_values='NaN', strategy=self.strategy).fit(X)
+        return self
+
+    def transform(self, X):
+        Xim = self.im.transform(X)
+        Ximputed = pd.DataFrame(Xim, index=X.index, columns=X.columns)
+        return Ximputed
+
+
+#Clean Numeric
+
+class LogTrans(BaseEstimator, TransformerMixin):
+    """Tests skew of numeric dataset. If skew test p<=0.05, ensure values are log transformed."""
+    #TODO: Doesn't always work as planned with skew test. Especially when distribution is close to uniform.
+
+    def __init__(self, pvalue=1):
+        self.pvalue = pvalue
+
+    def transform(self, X):
+        combine = zip(X, self.pvalue)
+        Xtl = [np.log1p(np.absolute(X[XSeries])) if pvalues <= 0.05 else X[XSeries] for XSeries, pvalues in combine]
+        return reduce(lambda X1, X2: pd.concat((X1, X2), axis=1), Xtl)
+
+    def fit(self, X, y=None):
+        self.zscore, self.pvalue = skewtest(X)
+        return self
+
+
+class DFStandardScaler(BaseEstimator, TransformerMixin):
+    """Standardizes distribution. Pandas compatible. """
+
+    def __init__(self):
+        self.ss = None
+
+    def fit(self, X, y=None):
+        self.ss = StandardScaler().fit(X)
+        return self
+
+    def transform(self, X):
+        Xss = self.ss.transform(X)
+        Xscaled = pd.DataFrame(Xss, index=X.index, columns=X.columns)
+        return Xscaled
+
+
+
+#Clean Categorical
+
+class CleanString(BaseEstimator, TransformerMixin):
+    """Cleans String. Pandas compatible"""
+
+    def fit(self, X, y = None):
+        return self
+
+    def transform(self, X):
+        assert isinstance(X, pd.DataFrame)
+        return X.apply(lambda s: s.str.replace(' ', ''))
+
+
+class GetDummies(BaseEstimator, TransformerMixin):
+    """Uses pandas get dummies over OneHotEncoder. Pandas compatible."""
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        assert isinstance(X, pd.DataFrame)
+        return pd.get_dummies(X)
+
+
+
+
+
+# Old code. Needs to be removed.
+
 
 def daysToYears(dfIn, dfOut):
     """Update education and one hot encode them"""
@@ -13,15 +139,6 @@ def daysToYears(dfIn, dfOut):
     dfOut = pd.concat([dfOut, years], axis = 1)
     return dfOut
 
-def normalizeIncome(dfIn, dfOut):
-    """OLD - Log transform income and standardize income"""
-    nIncome = np.log(dfIn['AMT_INCOME_TOTAL'])
-    nIncome.rename('logAMT_INCOME', inplace = True)
-    nMean = dfIn['AMT_INCOME_TOTAL'].mean() ## Finds mean
-    nStd = dfIn['AMT_INCOME_TOTAL'].std() ## Finds standard deviation
-    nIncome = (nIncome - nMean)/nStd ## Standardization
-    dfOut = pd.concat([dfOut, nIncome], axis = 1)
-    return dfOut
 
 def standardizedIncome(dfIn, dfOut):
     """Log transform income and standardize"""
@@ -31,8 +148,9 @@ def standardizedIncome(dfIn, dfOut):
 
 
 def engineerDays(dfIn, dfOut):
-    '''DAYS_EMPLOYEED is from when employment starts. Data is positively skewed.
-    Need to log transform. Added flag columns for the anomly in data and people who have no job (only 2 in train set) .'''
+    """DAYS_EMPLOYEED is from when employment starts. Data is positively skewed.
+    Need to log transform. Added flag columns for the anomly in data and people who have no job (only 2 in train set) .
+    """
 
     imp = Imputer(missing_values='NaN', strategy='mean', axis=1)
 
@@ -127,7 +245,7 @@ def cleanNames(dfOut):
 
 def cleanNamesTest(dfOut):
     dfOut.columns = ['SK_ID_CURR', 'DAYS_BIRTH', 'scaledLogINC', 'DAYS_EMPLOYED_ANOM', 'DAYS_EMPLOYED_ZERO', 'DAYS_EMPLOYED',
-                     'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'EDU_Academic_degree', 'EDU_Higher_education',
+                     'NAME_CONTRACT_TYPE"', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'EDU_Academic_degree', 'EDU_Higher_education',
                      'EDU_Incomplete_higher', 'EDU_Lower_secondary', 'EDU_Secondary_special', 'FAM_Civil_marriage',
                      'FAM_Married', 'FAM_Separated', 'FAM_Single', 'FAM_Widow', 'INC_Businessman',
                      'INC_Commercial',  'INC_Pensioner', 'INC_State', 'INC_Student', 'INC_Unemployed',
