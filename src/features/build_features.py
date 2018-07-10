@@ -9,8 +9,7 @@ import pandas as pd
 from scipy.stats  import skewtest
 
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.preprocessing import Imputer, scale, LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import Imputer, StandardScaler, LabelEncoder
 
 
 
@@ -72,6 +71,7 @@ class DFImputer(BaseEstimator, TransformerMixin):
 class LogTrans(BaseEstimator, TransformerMixin):
     """Tests skew of numeric dataset. If skew test p<=0.05, ensure values are log transformed."""
     #TODO: Doesn't always work as planned with skew test. Especially when distribution is close to uniform.
+    #TODO: Test with different distributions
 
     def __init__(self, pvalue=1):
         self.pvalue = pvalue
@@ -124,9 +124,6 @@ class GetDummies(BaseEstimator, TransformerMixin):
     def transform(self, X):
         assert isinstance(X, pd.DataFrame)
         return pd.get_dummies(X)
-
-
-
 
 
 # Old code. Needs to be removed.
