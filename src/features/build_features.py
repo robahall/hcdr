@@ -10,6 +10,7 @@ from scipy.stats  import skewtest
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import Imputer, StandardScaler, LabelEncoder
+from sklearn.compose import ColumnTransformer
 
 
 
@@ -73,16 +74,24 @@ class LogTrans(BaseEstimator, TransformerMixin):
     #TODO: Doesn't always work as planned with skew test. Especially when distribution is close to uniform.
     #TODO: Test with different distributions
 
-    def __init__(self, pvalue=1):
+    def __init__(self, pvalue=[]):
         self.pvalue = pvalue
 
     def transform(self, X):
-        combine = zip(X, self.pvalue)
-        Xtl = [np.log1p(np.absolute(X[XSeries])) if pvalues <= 0.05 else X[XSeries] for XSeries, pvalues in combine]
-        return reduce(lambda X1, X2: pd.concat((X1, X2), axis=1), Xtl)
+        if len(self.pvalue) > 1:
+            combine = zip(X, self.pvalue)
+            Xtl = [np.log1p(np.absolute(X[XSeries])) if pvalues <= 0.05 else X[XSeries] for XSeries, pvalues in combine]
+            df =  reduce(lambda X1, X2: pd.concat((X1, X2), axis=1), Xtl)
+            return df
+        elif self.pvalue[0] <= 0.05:
+            df = pd.DataFrame(np.log1p(np.absolute(X)))
+            return df
+        else:
+            return X
 
     def fit(self, X, y=None):
-        self.zscore, self.pvalue = skewtest(X)
+        _, pvalue = skewtest(X)
+        self.pvalue.append(pvalue)
         return self
 
 
@@ -316,3 +325,24 @@ def executeFeatures(dfIn, train = True):
         dfOut = createPolyFeatures(dfOut)
 
     return dfOut
+
+if __name__ == "__main__":
+
+    allcols = ["SK_ID_CURR", "TARGET", "DAYS_BIRTH",
+                   "AMT_INCOME_TOTAL", "DAYS_EMPLOYED", "NAME_EDUCATION_TYPE",
+                   "NAME_FAMILY_STATUS", "NAME_INCOME_TYPE", "AMT_CREDIT",
+                   "AMT_ANNUITY", "DAYS_EMPLOYED", "EXT_SOURCE_1",
+                   "EXT_SOURCE_2", "EXT_SOURCE_3"]
+
+    testcols = ["AMT_INCOME_TOTAL", "DAYS_EMPLOYED",]
+
+    testDF = pd.read_csv("../../data/raw/application_train.csv", usecols = testcols)
+
+    newFeatureExt = ColumnTransformer([('numTransformed', LogTrans(), "AMT_INCOME_TOTAL")], remainder='passthrough')
+
+    transCtDF = newFeatureExt.fit_transform(testDF)
+
+    print(transCtDF)
+
+
+
