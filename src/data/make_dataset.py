@@ -101,7 +101,7 @@ def fbNumericNonLog():
     """Scale without log transform"""
     featureNumeric = Pipeline([
         ('selector', bf.TypeSelector(np.number)),
-        ('fillNaN', bf.DFImputer()),
+        ('fillNaN', bf.DFsImputer()),
         ('scaler', bf.DFStandardScaler())
     ])
     return featureNumeric
@@ -111,7 +111,7 @@ def fbNumericLog():
     """Scale with log transform"""
     featureNumeric = Pipeline([
         ('selector', bf.TypeSelector(np.number)),
-        ('fillNaN', bf.DFImputer()),
+        ('fillNaN', bf.DFsImputer()),
         ('logTransform', bf.DFLogTrans()),
         ('scaler', bf.DFStandardScaler())
     ])
@@ -152,7 +152,11 @@ def fullPipe(df):
      #  'AMT_CREDIT', 'AMT_ANNUITY', 'DAYS_EMPLOYED.1', 'EXT_SOURCE_1',
      # 'EXT_SOURCE_2', 'EXT_SOURCE_3']]
 
-     Current columns out [[
+     Current columns out ['DAYS_BIRTH', 'AMT_INCOME_TOTAL', 'DAYS_EMPLOYED',
+       'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_INCOME_TYPE',
+       'AMT_CREDIT', 'AMT_ANNUITY', 'DAYS_EMPLOYED.1', 'EXT_SOURCE_1',
+       'EXT_SOURCE_2', 'EXT_SOURCE_3', 'DAYS_EMPLOYED_ANOM',
+       'DAYS_EMPLOYED_ZERO', 'creditIncomePct', 'annuityIncomePct']
     """
 
     df = ppDaysBirth(df) # function to pre-process day of birth
@@ -160,8 +164,16 @@ def fullPipe(df):
     df = ppCreditIncome(df) # function to create credit income column
     df = ppAnnuityIncome(df) # function to create annuity income column
 
+    # Splitting out parts of pipeline till I fix Column Transformer
+    # Does it not like these in functions?
+
+    pipes= Pipeline(['numeric', bf.DFFeatureUnion(
+                transformer_list=[('numeric',fbNumericNonLog())])])
+
+    dfOut = pipes.fit_transform(df['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3'])
 
 
+    print(dfOut)
     return df
 
 
