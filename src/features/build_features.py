@@ -9,8 +9,9 @@ import pandas as pd
 from scipy.stats  import skewtest
 
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import Imputer, StandardScaler, LabelEncoder
+from sklearn.preprocessing import Imputer, StandardScaler, LabelEncoder, scale
 from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 
 
 
@@ -48,7 +49,7 @@ class TypeSelector(BaseEstimator, TransformerMixin):
 
 
 
-class DFImputer(BaseEstimator, TransformerMixin):
+class DFsImputer(BaseEstimator, TransformerMixin):
     """Selects how missing data will be updated. Pandas compatible."""
     #TODO: need to create a dummy column to keep NaN features available.
 
@@ -58,7 +59,7 @@ class DFImputer(BaseEstimator, TransformerMixin):
         self.statistics_ = None
 
     def fit(self, X, y=None):
-        self.im = Imputer(missing_values='NaN', strategy=self.strategy).fit(X)
+        self.im = SimpleImputer(missing_values='NaN', strategy=self.strategy).fit(X)
         return self
 
     def transform(self, X):
@@ -69,7 +70,7 @@ class DFImputer(BaseEstimator, TransformerMixin):
 
 #Clean Numeric
 
-class LogTrans(BaseEstimator, TransformerMixin):
+class DFLogTrans(BaseEstimator, TransformerMixin):
     """Tests skew of numeric dataset. If skew test p<=0.05, ensure values are log transformed."""
     #TODO: Doesn't always work as planned with skew test. Especially when distribution is close to uniform.
     #TODO: Test with different distributions
@@ -134,16 +135,23 @@ class GetDummies(BaseEstimator, TransformerMixin):
         assert isinstance(X, pd.DataFrame)
         return pd.get_dummies(X)
 
+#Clean Binary
+
+class DFBinaryEncoder(BaseEstimator, TransformerMixin):
+    """Converts boolean to 1 or 0"""
+
+    def fit(self, X, y = None):
+        return self
+
+    def transform(self, X):
+        assert isinstance(X, pd.DataFrame)
+        return self
+
+
 
 # Old code. Needs to be removed.
 
 
-def daysToYears(dfIn, dfOut):
-    """Update education and one hot encode them"""
-
-    years = dfIn['DAYS_BIRTH'] / -365
-    dfOut = pd.concat([dfOut, years], axis = 1)
-    return dfOut
 
 
 def standardizedIncome(dfIn, dfOut):
@@ -184,7 +192,6 @@ def simplifyFamily(dfIn, dfOut):
     dfOut = pd.concat([dfOut, fam], axis = 1)
     return dfOut
 
-
 def simplifyIncome(dfIn, dfOut):
     "Update Income and one hot encode them"
 
@@ -205,31 +212,6 @@ def createEncoders(dfIn, dfOut):
 
                 leCount += 1
     print("{:d} columns were label encoded".format(leCount))
-    return dfOut
-
-def makeCreditIncome(dfIn, dfOut):
-    '''Create feature of Credit to Income percentage'''
-    creditIncome = dfIn['AMT_CREDIT'] / dfIn['AMT_INCOME_TOTAL']
-    creditIncome = pd.Series(np.log(creditIncome.fillna(creditIncome.median())), name='creditIncomePct')
-    dfOut = pd.concat([dfOut, creditIncome], axis=1)
-    return dfOut
-
-def makeAnnuityIncome(dfIn, dfOut):
-    '''Amount of annualized payment to income percentage '''
-    annuityIncomePct = dfIn['AMT_ANNUITY'] / dfIn['AMT_INCOME_TOTAL']
-    annuityIncomePct = pd.Series(np.log(annuityIncomePct.fillna(annuityIncomePct.median())), name='annuityIncomePct')
-    dfOut = pd.concat([dfOut, annuityIncomePct], axis=1)
-    return dfOut
-
-def makeCreditTerm(dfIn, dfOut):
-    '''Fraction of annualized payment to credit'''
-    dfOut['creditTerm'] = dfIn['AMT_ANNUITY'] / dfIn['AMT_CREDIT']
-    dfOut['creditTerm'] = dfOut['creditTerm'].fillna(dfOut['creditTerm'].median())
-    return dfOut
-
-def makeDaysEmployeed(dfIn, dfOut):
-    '''Ratio of days employed to days since they were born'''
-    dfOut['daysEmployedPct'] = dfIn['DAYS_EMPLOYED'] / dfIn['DAYS_BIRTH']
     return dfOut
 
 def addExtSources(dfIn, dfOut):
@@ -291,17 +273,12 @@ def executeFeatures(dfIn, train = True):
 
     if train == True:
         dfOut = dfIn['TARGET'] #update this with numerical columns that don't need cleaning
-        dfOut = daysToYears(dfIn, dfOut)
         dfOut = standardizedIncome(dfIn, dfOut)
         dfOut = engineerDays(dfIn, dfOut)
         dfOut = createEncoders(dfIn, dfOut)
         dfOut = simplifyEducation(dfIn, dfOut)
         dfOut = simplifyFamily(dfIn, dfOut)
         dfOut = simplifyIncome(dfIn, dfOut)
-        dfOut = makeCreditIncome(dfIn, dfOut)
-        dfOut = makeAnnuityIncome(dfIn, dfOut)
-        dfOut = makeCreditTerm(dfIn, dfOut)
-        dfOut = makeDaysEmployeed(dfIn, dfOut)
         dfOut = addExtSources(dfIn, dfOut)
         dfOut = cleanNames(dfOut)
         dfOut = createPolyFeatures(dfOut)
@@ -326,23 +303,6 @@ def executeFeatures(dfIn, train = True):
 
     return dfOut
 
-if __name__ == "__main__":
-
-    allcols = ["SK_ID_CURR", "TARGET", "DAYS_BIRTH",
-                   "AMT_INCOME_TOTAL", "DAYS_EMPLOYED", "NAME_EDUCATION_TYPE",
-                   "NAME_FAMILY_STATUS", "NAME_INCOME_TYPE", "AMT_CREDIT",
-                   "AMT_ANNUITY", "DAYS_EMPLOYED", "EXT_SOURCE_1",
-                   "EXT_SOURCE_2", "EXT_SOURCE_3"]
-
-    testcols = ["AMT_INCOME_TOTAL", "DAYS_EMPLOYED",]
-
-    testDF = pd.read_csv("../../data/raw/application_train.csv", usecols = testcols)
-
-    newFeatureExt = ColumnTransformer([('numTransformed', LogTrans(), "AMT_INCOME_TOTAL")], remainder='passthrough')
-
-    transCtDF = newFeatureExt.fit_transform(testDF)
-
-    print(transCtDF)
 
 
 
