@@ -52,6 +52,7 @@ class TypeSelector(BaseEstimator, TransformerMixin):
 class DFsImputer(BaseEstimator, TransformerMixin):
     """Selects how missing data will be updated. Pandas compatible."""
     #TODO: need to create a dummy column to keep NaN features available.
+    #TODO: Int() issue with simple imputer
 
     def __init__(self, strategy='mean'):
         self.strategy = strategy
@@ -146,6 +147,8 @@ class DFBinaryEncoder(BaseEstimator, TransformerMixin):
     def transform(self, X):
         assert isinstance(X, pd.DataFrame)
         return self
+
+
 
 
 
@@ -284,17 +287,12 @@ def executeFeatures(dfIn, train = True):
         dfOut = createPolyFeatures(dfOut)
     else:
         dfOut = dfIn['SK_ID_CURR'] ## tags from test set
-        dfOut = daysToYears(dfIn, dfOut)
         dfOut = standardizedIncome(dfIn, dfOut)
         dfOut = engineerDays(dfIn, dfOut)
         dfOut = createEncoders(dfIn, dfOut)
         dfOut = simplifyEducation(dfIn, dfOut)
         dfOut = simplifyFamily(dfIn, dfOut)
         dfOut = simplifyIncome(dfIn, dfOut)
-        dfOut = makeCreditIncome(dfIn, dfOut)
-        dfOut = makeAnnuityIncome(dfIn, dfOut)
-        dfOut = makeCreditTerm(dfIn, dfOut)
-        dfOut = makeDaysEmployeed(dfIn, dfOut)
         dfOut = addExtSources(dfIn, dfOut)
         dfOut = dfOut.drop('CODE_GENDER', axis = 1) ## Need to fix this
         #print(dfOut.columns)
