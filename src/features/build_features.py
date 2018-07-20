@@ -47,6 +47,19 @@ class TypeSelector(BaseEstimator, TransformerMixin):
         assert isinstance(X, pd.DataFrame)
         return X.select_dtypes(include=[self.dtype])
 
+class ColumnExtractor(BaseEstimator, TransformerMixin):
+
+    def __init__(self, cols):
+        self.cols = cols
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        # assumes X is a DataFrame
+        Xcols = X[self.cols]
+        return Xcols
+
 
 
 class DFsImputer(BaseEstimator, TransformerMixin):
@@ -80,12 +93,12 @@ class DFLogTrans(BaseEstimator, TransformerMixin):
         self.pvalue = pvalue
 
     def transform(self, X):
-        if len(self.pvalue) > 1:
+        if len(self.pvalue[0]) > 1:
             combine = zip(X, self.pvalue)
-            Xtl = [np.log1p(np.absolute(X[XSeries])) if pvalues <= 0.05 else X[XSeries] for XSeries, pvalues in combine]
+            Xtl = [np.log1p(np.absolute(X[XSeries])) if pvalues[0] <= 0.05 else X[XSeries] for XSeries, pvalues in combine]
             df =  reduce(lambda X1, X2: pd.concat((X1, X2), axis=1), Xtl)
             return df
-        elif self.pvalue[0] <= 0.05:
+        elif self.pvalue[0][0] <= 0.05:
             df = pd.DataFrame(np.log1p(np.absolute(X)))
             return df
         else:
@@ -102,9 +115,14 @@ class DFStandardScaler(BaseEstimator, TransformerMixin):
 
     def __init__(self):
         self.ss = None
+        self.mean_ = None
+        self.scale_ = None
 
     def fit(self, X, y=None):
-        self.ss = StandardScaler().fit(X)
+        self.ss = StandardScaler()
+        self.ss.fit(X)
+        self.mean_ = pd.Series(self.ss.mean_, index = X.columns)
+        self.scale_ = pd.Series(self.ss.scale_, index = X.columns)
         return self
 
     def transform(self, X):
